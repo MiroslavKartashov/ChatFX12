@@ -11,7 +11,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.image.Image?>
 <!--suppress ALL, XmlPathReference -->
-<VBox fx:controller="sample.Controller"
+
+<VBox fx:controller="client.Controller"
       xmlns:fx="http://javafx.com/fxml" alignment="center">
     <TextArea fx:id="textArea" editable="false" VBox.vgrow ="ALWAYS"/>
 
