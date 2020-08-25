@@ -5,7 +5,6 @@ import server.inter.AuthService;
 import java.util.LinkedList;
 import java.util.List;
 
-
     public class AuthServiceImpl implements AuthService {
 
         private List<UserEntity> usersList;

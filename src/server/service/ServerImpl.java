@@ -25,7 +25,6 @@ public class ServerImpl implements Server {
                 System.out.println("Wait join clients");
                 Socket socket = serverSocket.accept();
                 System.out.println("Client join");
-                new ClientHandler(this, socket);
             }
         } catch (IOException e) {
             System.out.println("Problem in server");
@@ -54,19 +53,39 @@ public class ServerImpl implements Server {
     }
 
     @Override
-    public synchronized void subscribe(ClientHandler client) {
+    public void privateMsg(String s, String nickoftheReciever) {
+        for (ClientHandler с : clients) {
+            if (с.getNick().equalsIgnoreCase(nickoftheReciever)) {
+                с.sendMsg(s);
+            }
+        }
+
+    }
+
+    @Override
+    public void subscribe(ClientHandler client) {
         clients.add(client);
     }
 
     @Override
-    public synchronized void unsubscribe(ClientHandler client) {
+    public void unsubscribe(ClientHandler client) {
         clients.remove(client);
     }
 
     @Override
-    public AuthService getAuthService() {
-        return authService;
+    public void uniCast(ClientHandler from, String nickTo, String msg) {
+        for (ClientHandler o : clients) {
+            if (o.getNick().equals(nickTo)) {
+                o.sendMsg("from " + from.getNick() + ": " + msg);
+                from.sendMsg("to " + nickTo + " you sent: " + msg);
+                return;
+            }
+        }
+        from.sendMsg("Nick: " + nickTo + " was not found in the chat.");
     }
 
+    @Override
+    public AuthService getAuthService() {
+        return null;
+    }
 }
-

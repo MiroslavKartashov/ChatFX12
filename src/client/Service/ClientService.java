@@ -9,39 +9,35 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+public class ClientService {
+    Socket socket;
+    DataInputStream in;
+    DataOutputStream out;
 
-
-public class ClientService extends Application {
-
-    Controller con = new Controller();
-
-    private Socket socket;
-    private DataInputStream dis;
-    private DataOutputStream dos;
+ Controller con = new Controller();
     public ClientService() {
-
         try {
             socket = new Socket("localhost", 3344);
-            dis = new DataInputStream(socket.getInputStream());
-            dos = new DataOutputStream(socket.getOutputStream());
+            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream());
             setAuthorized(false);
             Thread t1 = new Thread(() -> {
                 try {
                     while (true) {
-                        String strMsg = dis.readUTF();
+                        String strMsg = in.readUTF();
                         if (strMsg.startsWith("/authOk")) {
                             setAuthorized(true);
                             break;
                         }
-                        con.textArea.appendText(strMsg + "\n");
+                     con.textArea.appendText(strMsg + "\n");
 
                     }
                     while (true) {
-                        String strMsg = dis.readUTF();
+                        String strMsg = in.readUTF();
                         if (strMsg.equals("/exit")) {
                             break;
                         }
-                       con.textArea.appendText(strMsg + "\n");
+                    con.textArea.appendText(strMsg + "\n");
 
 
                     }
@@ -56,13 +52,9 @@ public class ClientService extends Application {
         }
     }
 
-    @Override
-    public void start(Stage primaryStage) throws Exception {
-
-    }
-
 
     private void setAuthorized(boolean b) {
+
     }
 
 

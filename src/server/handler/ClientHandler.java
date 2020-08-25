@@ -1,8 +1,8 @@
 package server.handler;
 
 
-import server.inter.AuthService;
 import server.inter.Server;
+import server.service.ServerImpl;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,29 +10,23 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ClientHandler {
-
-    private Server server;
-    private Socket socket;
-    private DataInputStream dis;
-    private DataOutputStream dos;
-
-    private String nick;
-
-    public ClientHandler() {
-
-    }
-
-    public String getNick() {
+      private ServerImpl server;
+      private Socket socket;
+      private DataInputStream in;
+      private DataOutputStream out;
+      private String nick;
+      public String getNick() {
         return nick;
     }
 
-    public ClientHandler(Server server, Socket socket) {
+    public ClientHandler(ServerImpl server, Socket socket) throws IOException {
         try {
             this.server = server;
             this.socket = socket;
-            this.dis = new DataInputStream(socket.getInputStream());
-            this.dos = new DataOutputStream(socket.getOutputStream());
+            this.in = new DataInputStream(socket.getInputStream());
+            this.out = new DataOutputStream(socket.getOutputStream());
             this.nick = "";
+
             new Thread(() -> {
                 try {
                     authentication();
@@ -50,7 +44,7 @@ public class ClientHandler {
 
     private void authentication() throws IOException {
         while (true) {
-            String str = dis.readUTF();
+            String str = in.readUTF();
             if (str.startsWith("/auth")) {
                 String[] dataArray = str.split("\\s");
                 String nick = server.getAuthService().getNick(dataArray[1], dataArray[2]);
@@ -68,12 +62,39 @@ public class ClientHandler {
                     sendMsg("Incorrect password or login");
                 }
             }
+            if (str.equalsIgnoreCase("/end")) {
+                sendMsg("/clientClose");
+                break;
+            }
+            if (str.startsWith("/w")){
+                String[] words = str.split(" ");
+                String nickoftheReciever = words[1];
+                String message = str.substring(3);
+                server.privateMsg(nick+": " + message, nickoftheReciever);
+            } else {
+                server.broadcastMsg(nick + ": " + str);}
         }
-    }
+           try {
+                out.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                in.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try {
+                socket.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            server.unsubscribe(ClientHandler.this);
+        }
 
     public void sendMsg(String msg) {
         try {
-            dos.writeUTF(msg);
+            out.writeUTF(msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -81,7 +102,7 @@ public class ClientHandler {
 
     public void readMessage() throws IOException {
         while (true) {
-            String clientStr = dis.readUTF();
+            String clientStr = in.readUTF();
             System.out.println("from " + this.nick + ": " + clientStr);
             if (clientStr.equals("/exit")) {
                 return;
@@ -95,13 +116,13 @@ public class ClientHandler {
         server.broadcastMsg(this.nick + ": out from chat");
 
         try {
-            dis.close();
+            in.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         try {
-            dos.close();
+            out.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
